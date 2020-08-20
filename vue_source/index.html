@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="app">
+    <p>{{fullName}}</p>
+    <my-component></my-component>  
+  </div>
+  <script src="dist/umd/vue.js"></script>
+  <script>
+    Vue.component('my-component',{
+      template: '<button>{{a}}</button>',
+      data(){
+        return {
+          a:1
+        }
+      }
+    });
+    Vue.component('aa',{
+      template: '<div>全局aa</div>'
+    })
+
+    let vm = new Vue({
+      el:'#app',
+      data:{
+        firstName:'张',
+        lastName:'三'
+      },
+      computed: {
+        fullName(){
+          return this.firstName + this.lastName
+        }
+      },
+      components:{
+        aa:{
+          template:'<div>hello</div>'
+        },
+        bb:{
+          template:'<div>world</div>'
+        }
+      }
+    })
+
+    console.log(vm);
+  </script>
+</body>
+</html>

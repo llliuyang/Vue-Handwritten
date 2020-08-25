@@ -1,0 +1,45 @@
+{
+  "publicPath": "",
+  "all": [
+    "client.bundle.js"
+  ],
+  "initial": [
+    "client.bundle.js"
+  ],
+  "async": [],
+  "modules": {
+    "3de56f56": [
+      0
+    ],
+    "7a24cd3c": [
+      0
+    ],
+    "6c496d9c": [
+      0
+    ],
+    "ff44a8fe": [
+      0
+    ],
+    "fcc2da62": [
+      0
+    ],
+    "4f2ce272": [
+      0
+    ],
+    "456827ca": [
+      0
+    ],
+    "ebe0ea16": [
+      0
+    ],
+    "97d7f214": [
+      0
+    ],
+    "ed78ccda": [
+      0
+    ],
+    "0526a7e8": [
+      0
+    ]
+  }
+}

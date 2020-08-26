@@ -22,8 +22,8 @@ const render = VueServerRenderer.createBundleRenderer(serverBundle, {
   clientManifest: manifest
 });
 
-router.get('/', async (ctx) => {
-  ctx.body = await render.renderToString()
+router.get('/(.*)', async (ctx) => {
+  ctx.body = await render.renderToString({url: ctx.url})
 })
 app.use(router.routes());
 app.use(static(path.resolve(__dirname, 'dist')));

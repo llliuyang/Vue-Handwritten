@@ -23,8 +23,16 @@ const render = VueServerRenderer.createBundleRenderer(serverBundle, {
 });
 
 router.get('/(.*)', async (ctx) => {
-  ctx.body = await render.renderToString({url: ctx.url})
+  try {
+    ctx.body = await render.renderToString({url: ctx.url})
+  }catch(e){
+    if(e.code ===404){
+      ctx.body = 'page not found'
+    }
+  }
 })
-app.use(router.routes());
+
+//先匹配静态资源，找不到再去找对应的api
 app.use(static(path.resolve(__dirname, 'dist')));
+app.use(router.routes());
 app.listen(4000);

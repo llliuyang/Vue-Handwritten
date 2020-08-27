@@ -9,7 +9,13 @@
 </template>
 
 <script>
-export default {};
+export default {
+  name:'app',
+  mounted(){
+    console.log(this.$store);
+  }
+};
+
 </script>
 
 <style scoped>

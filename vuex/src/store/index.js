@@ -1,6 +1,9 @@
 import Vue from 'vue'
 import Vuex from '@/vuex'
 
+import a from './a'
+import b from './b'
+
 Vue.use(Vuex)
 
 const store = new Vuex.Store({
@@ -23,6 +26,10 @@ const store = new Vuex.Store({
         commit('changeAge', payload)
       }, 1000)
     }
+  },
+  modules:{
+    a,
+    b
   }
 })
 

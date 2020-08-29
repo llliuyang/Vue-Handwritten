@@ -1,56 +1,93 @@
 import applyMixin from "./mixin";
+import ModuleCollection from "./module/module-collection";
 import { forEachValue } from "./util";
 
 export let Vue;
+/**
+ * 
+ * @param {*} store 容器
+ * @param {*} rootState 根模块
+ * @param {*} path 所有路径
+ * @param {*} module 格式化后的结果
+ */
+const installModule = (store, rootState, path, module) => {
+  if (path.length > 0) {
+    let parent = path.slice(0, -1).reduce((memo, current) => {
+      return memo[current]
+    }, rootState)
+    Vue.set(parent, path[path.length - 1], module.state)
+  }
+
+  module.forEachMutation((mutation, key) => {
+    store._mutations[key] = (store._mutations[key] || [])
+    store._mutations[key].push((payload) => {
+      mutation.call(store, module.state, payload)
+    })
+  });
+
+  module.forEachAction((action, key) => {
+    store._actions[key] = (store._actions[key] || [])
+    store._actions[key].push((payload) => {
+      action.call(store, store, payload)
+    })
+  });
+
+  module.forEachGetter((getter, key) => {
+    store._wrappedGetters[key] = function () {
+      return getter(module.state)
+    }
+  });
+
+  module.forEachChild((child, key) => {
+    installModule(store, rootState, path.concat(key), child)
+  })
+
+}
+
+function resetStateVM(store, state) {
+  const computed = {}
+  store.getters = {}
+
+  forEachValue(store._wrappedGetters, (fn, key) => {
+    computed[key] = () => {
+      return fn()
+    }
+    Object.defineProperty(store.getters, key, {
+      get: () => store._vm[key]
+    })
+  })
+
+  store._vm = new Vue({
+    data: {
+      $$state: state
+    },
+    computed
+  })
+
+}
+
 export class Store {
   constructor(options) {
-    // this.state = options.state //这样写数据不是响应式的，改变数据视图不会更新
     const state = options.state
-    const computed = {}
-
-    this.getters = {}
-    forEachValue(options.getters, (fn, key) => {
-      computed[key] = () => {
-        return fn(this.state)
-      }
-      Object.defineProperty(this.getters, key, {
-        get: () => this._vm[key]
-      })
-    })
-
-    this._vm = new Vue({
-      data: {
-        $$state: state
-      },
-      computed
-    });
-
-    // Object.keys(options.getters).forEach(key => {
-    //   Object.defineProperty(this.getters, key, {
-    //     get: () => options.getters[key](this.state)
-    //   })
-    // })
-
-    this.mutations = {}
-    this.actions = {}
-    forEachValue(options.mutations, (fn, key) => {
-      this.mutations[key] = (payload) => fn(this.state, payload)
-    })
-
-    forEachValue(options.actions, (fn, key) => {
-      this.actions[key] = (payload) => fn(this, payload)
-    })
-
+    this._mutations = {}
+    this._actions = {}
+    this._wrappedGetters = {}
+    // 格式化数据
+    this._modules = new ModuleCollection(options)
+    // 安装模块
+    installModule(this, state, [], this._modules.root)
+    // 将getters state 定义到vm实例上
+    resetStateVM(this, state)
   };
 
   commit = (type, payload) => {
-    this.mutations[type](payload)
+    this._mutations[type].forEach(mutation => mutation.call(this, payload))
   }
 
   dispatch = (type, payload) => {
-    this.actions[type](payload)
+    this._actions[type].forEach(action => action.call(this, payload))
   }
-  
+
   get state() {
     return this._vm._data.$$state
   };

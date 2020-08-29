@@ -3,6 +3,13 @@ import ModuleCollection from "./module/module-collection";
 import { forEachValue } from "./util";
 
 export let Vue;
+// 获取最新状态，保证数据更新
+function getState(store,path) {
+  return path.reduce((newState,current)=>{
+    return newState[current]
+  },store.state)
+
+}
 /**
  * 
  * @param {*} store 容器
@@ -25,7 +32,10 @@ const installModule = (store, rootState, path, module) => {
     key = namespace + key
     store._mutations[key] = (store._mutations[key] || [])
     store._mutations[key].push((payload) => {
-      mutation.call(store, module.state, payload)
+      mutation.call(store, getState(store,path), payload)
+      store._subscribes.forEach(fn => {
+        fn(mutation, store.state)
+      })
     })
   });
 
@@ -40,7 +50,7 @@ const installModule = (store, rootState, path, module) => {
   module.forEachGetter((getter, key) => {
     key = namespace + key
     store._wrappedGetters[key] = function () {
-      return getter(module.state)
+      return getter(getState(store,path))
     }
   });
 
@@ -78,13 +88,24 @@ export class Store {
     this._mutations = {}
     this._actions = {}
     this._wrappedGetters = {}
+    this._subscribes = []
     // 格式化数据
     this._modules = new ModuleCollection(options)
     // 安装模块
     installModule(this, state, [], this._modules.root)
     // 将getters state 定义到vm实例上
     resetStateVM(this, state)
+    // 插件执行
+    options.plugins.forEach(plugin => plugin(this))
   };
+
+  subscribe(fn) {
+    this._subscribes.push(fn)
+  }
+
+  replaceState(state) {
+    this._vm._data.$$state = state
+  }
 
   commit = (type, payload) => {
     this._mutations[type].forEach(mutation => mutation.call(this, payload))

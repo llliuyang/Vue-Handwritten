@@ -11,6 +11,9 @@ export let Vue;
  * @param {*} module 格式化后的结果
  */
 const installModule = (store, rootState, path, module) => {
+
+  let namespace = store._modules.getNamespaced(path)
+
   if (path.length > 0) {
     let parent = path.slice(0, -1).reduce((memo, current) => {
       return memo[current]
@@ -19,6 +22,7 @@ const installModule = (store, rootState, path, module) => {
   }
 
   module.forEachMutation((mutation, key) => {
+    key = namespace + key
     store._mutations[key] = (store._mutations[key] || [])
     store._mutations[key].push((payload) => {
       mutation.call(store, module.state, payload)
@@ -26,6 +30,7 @@ const installModule = (store, rootState, path, module) => {
   });
 
   module.forEachAction((action, key) => {
+    key = namespace + key
     store._actions[key] = (store._actions[key] || [])
     store._actions[key].push((payload) => {
       action.call(store, store, payload)
@@ -33,6 +38,7 @@ const installModule = (store, rootState, path, module) => {
   });
 
   module.forEachGetter((getter, key) => {
+    key = namespace + key
     store._wrappedGetters[key] = function () {
       return getter(module.state)
     }

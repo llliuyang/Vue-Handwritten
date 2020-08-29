@@ -6,7 +6,7 @@
     a模块: {{ this.$store.state.a.age }}<br />
     b模块: {{ this.$store.state.b.age }} <br />
 
-    <button @click="$store.commit('changeAge', 1)">同步更新+1</button>
+    <button @click="$store.commit('b/changeAge', 1)">同步更新+1</button>
     <button @click="$store.dispatch('changeAge', 1)">异步更新+1</button>
   </div>
 </template>
